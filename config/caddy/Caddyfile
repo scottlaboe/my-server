@@ -1,0 +1,31 @@
+{
+	# Production: leave CADDY_GLOBAL_OPTS empty (automatic Let's Encrypt HTTPS).
+	# Testing before DNS cutover: CADDY_GLOBAL_OPTS=local_certs
+	{$CADDY_GLOBAL_OPTS}
+}
+
+# Static portfolio (separate repo, cloned to /srv/portfolio on the host)
+scottlaboe.com, www.scottlaboe.com {
+	root * /srv/portfolio
+	encode zstd gzip
+	file_server
+}
+
+# WordPress
+blog.scottlaboe.com {
+	root * /var/www/html
+	encode zstd gzip
+
+	# Never execute PHP from uploads; block sensitive files
+	@uploads_php path_regexp ^/wp-content/uploads/.*\.php$
+	respond @uploads_php 403
+	@sensitive path /wp-config.php /xmlrpc.php /.git/* /.env
+	respond @sensitive 403
+
+	php_fastcgi wordpress:9000
+	file_server
+}
+
+www.blog.scottlaboe.com {
+	redir https://blog.scottlaboe.com{uri} permanent
+}

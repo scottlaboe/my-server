@@ -1,0 +1,83 @@
+name: my-server
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      CADDY_GLOBAL_OPTS: ${CADDY_GLOBAL_OPTS:-}
+    volumes:
+      - ./config/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${PORTFOLIO_DIR:-/srv/portfolio}:/srv/portfolio:ro
+      - wp:/var/www/html:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - wordpress
+    mem_limit: 128m
+
+  wordpress:
+    image: wordpress:6-php8.3-fpm-alpine
+    restart: unless-stopped
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?set in .env}
+      WORDPRESS_TABLE_PREFIX: wp_
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME', 'https://${BLOG_DOMAIN:-blog.scottlaboe.com}');
+        define('WP_SITEURL', 'https://${BLOG_DOMAIN:-blog.scottlaboe.com}');
+        define('DISALLOW_FILE_EDIT', true);
+    volumes:
+      - wp:/var/www/html
+      - ./config/php/zz-tuning.ini:/usr/local/etc/php/conf.d/zz-tuning.ini:ro
+      - ./config/php/zz-pool.conf:/usr/local/etc/php-fpm.d/zz-pool.conf:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 384m
+
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?set in .env}
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?set in .env}
+    volumes:
+      - db:/var/lib/mysql
+      - ./config/mariadb/tuning.cnf:/etc/mysql/conf.d/tuning.cnf:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    mem_limit: 256m
+
+  # One-off WP-CLI:  docker compose run --rm wpcli <command>
+  wpcli:
+    image: wordpress:cli
+    profiles: ["tools"]
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:?set in .env}
+    volumes:
+      - wp:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  wp:
+  db:
+  caddy_data:
+  caddy_config:

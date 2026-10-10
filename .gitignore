@@ -1,0 +1,6 @@
+.env
+*.sql
+*.sql.gz
+*.pem
+*.key
+data/
