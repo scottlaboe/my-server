@@ -12,20 +12,47 @@ and is cloned onto the server by the bootstrap script.
 
 ## Set up a new server
 
-On a fresh Ubuntu 24.04 instance (t4g.micro / 1 GB is enough):
+On a fresh Ubuntu 24.04 instance (t4g.micro / 1 GB is enough) launched with the
+`my-server-profile` instance profile:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/scottlaboe/my-server/main/scripts/bootstrap.sh | sudo bash
 ```
 
 This adds swap, installs Docker and the AWS CLI, clones this repo to `/opt/my-server` and the
-static site to `/srv/portfolio`, generates random database passwords in `.env`, installs cron jobs,
-and starts everything. It is safe to re-run.
+static site to `/srv/portfolio`, and installs cron jobs. Then it:
 
-Then restore your data (the database is the only thing that needs preserving):
+- restores `.env` from SSM `/my-server/env`, or generates one with random database passwords
+  and saves it there;
+- starts everything, and if the WordPress database is empty, restores the newest `db/` dump and
+  `uploads/` from the backup bucket;
+- installs [house-hunter](https://github.com/scottlaboe/house-hunter), cloning the private repo with
+  a read-only deploy key from SSM `/house-hunter/deploy-key` (skipped if the key isn't there).
+
+It is safe to re-run, and it never restores over existing data. Point DNS at the new server's
+IP (or move the Elastic IP) and Caddy gets certificates automatically.
+
+Only uploads are backed up from `wp-content`. Themes and plugins that don't ship with the
+WordPress image have to be reinstalled.
+
+### One-time AWS setup
+
+Run once per AWS account, from your own computer:
+
+```bash
+BUCKET=<backup-bucket> scripts/setup-aws.sh     # with admin credentials
+```
+
+This creates the `server-admin` IAM user and policy, scoped to EC2, the backup bucket, SSM
+`/my-server/*` and `/house-hunter/*`, the instance role, and the DNS zone. Its keys are saved as
+the AWS CLI profile `server-admin`. The script also lets the instance role read and save
+`/my-server/env`. house-hunter has its own `scripts/setup-aws.sh` for its deploy key.
+
+### Restoring by hand
 
 ```bash
 cd /opt/my-server
+scripts/restore.sh --latest                                   # newest backup in S3
 scripts/restore.sh /path/to/wordpress.sql.gz /path/to/wp-content.tar.gz
 ```
 
@@ -34,6 +61,7 @@ scripts/restore.sh /path/to/wordpress.sql.gz /path/to/wp-content.tar.gz
 | Task | Command |
 |---|---|
 | Apply repo changes / update images | `scripts/deploy.sh` |
+| Change `.env` | Edit it, then `scripts/deploy.sh` (saves it to SSM for the next server) |
 | Status | `docker compose ps` |
 | Logs | `docker compose logs -f caddy` |
 | WP-CLI | `docker compose run --rm wpcli <command>` |
@@ -57,4 +85,5 @@ Clear the setting for production so Let's Encrypt certificates are issued automa
 
 ## Secrets
 
-Nothing sensitive is committed. `.env` is gitignored and generated on the server.
+Nothing sensitive is committed. `.env` is gitignored, generated on the server, and kept in SSM
+`/my-server/env` (SecureString, last 100 versions retained) so a new server gets the same values.
