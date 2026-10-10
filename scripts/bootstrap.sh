@@ -10,6 +10,12 @@
 # Safe to re-run: every step is idempotent, and nothing is restored over existing data.
 set -euo pipefail
 
+# Under `curl | bash` this script arrives on stdin, and any command that reads stdin
+# (docker compose exec, for one) would swallow the rest of it. The braces make bash
+# read the whole script before running any of it; then stdin is detached.
+{
+exec </dev/null
+
 REPO_URL="${REPO_URL:-https://github.com/scottlaboe/my-server.git}"
 BRANCH="${BRANCH:-main}"
 SITE_URL="${SITE_URL:-https://github.com/scottlaboe/scottlaboe.com.git}"
@@ -144,3 +150,4 @@ fi
 
 echo
 echo "Done. Check status with:  cd $APP_DIR && docker compose ps"
+}
