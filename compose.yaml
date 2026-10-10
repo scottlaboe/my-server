@@ -16,6 +16,9 @@ services:
       - wp:/var/www/html:ro
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      - default
+      - edge   # shared with separately-deployed apps (e.g. house-hunter)
     depends_on:
       - wordpress
     mem_limit: 128m
@@ -81,3 +84,11 @@ volumes:
   db:
   caddy_data:
   caddy_config:
+
+networks:
+  default: {}
+  # Created by bootstrap.sh / deploy.sh. Other Compose projects join it so Caddy
+  # can reverse-proxy to them by alias without publishing ports on the host.
+  edge:
+    external: true
+    name: edge

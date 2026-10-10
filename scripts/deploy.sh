@@ -9,6 +9,7 @@ git pull --ff-only
 set -a; . ./.env; set +a
 git -C "${PORTFOLIO_DIR:-/srv/portfolio}" pull --ff-only
 
+docker network inspect edge >/dev/null 2>&1 || docker network create edge >/dev/null
 docker compose pull
 docker compose up -d --remove-orphans
 docker image prune -f >/dev/null

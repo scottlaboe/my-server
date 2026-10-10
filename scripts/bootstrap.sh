@@ -80,6 +80,9 @@ PATH=/usr/local/bin:/usr/bin:/bin
 EOF
 chmod 644 /etc/cron.d/my-server
 
+echo "==> Shared 'edge' network for separately-deployed apps"
+docker network inspect edge >/dev/null 2>&1 || docker network create edge >/dev/null
+
 echo "==> Start services"
 cd "$APP_DIR"
 docker compose up -d --remove-orphans

@@ -8,6 +8,7 @@ and is cloned onto the server by the bootstrap script.
 |---|---|
 | `scottlaboe.com`, `www.` | Static site from `/srv/portfolio` |
 | `blog.scottlaboe.com` | WordPress (PHP-FPM + MariaDB) |
+| `homes.scottlaboe.com` | [house-hunter](https://github.com/scottlaboe/house-hunter) (separate repo and Compose project; Caddy reaches it over the shared `edge` network) |
 
 ## Set up a new server
 

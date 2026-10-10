@@ -29,3 +29,14 @@ blog.scottlaboe.com {
 www.blog.scottlaboe.com {
 	redir https://blog.scottlaboe.com{uri} permanent
 }
+
+# House Hunter (separate repo: scottlaboe/house-hunter, its own Compose project on the "edge" network)
+homes.scottlaboe.com {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Robots-Tag "noindex, nofollow"
+		-Server
+	}
+	reverse_proxy house-hunter:8000
+}
