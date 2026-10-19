@@ -8,7 +8,7 @@ and is cloned onto the server by the bootstrap script.
 |---|---|
 | `scottlaboe.com`, `www.` | Static site from `/srv/portfolio` |
 | `blog.scottlaboe.com` | WordPress (PHP-FPM + MariaDB) |
-| `homes.scottlaboe.com` | [house-hunter](https://github.com/scottlaboe/house-hunter) (separate repo and Compose project; Caddy reaches it over the shared `edge` network) |
+| `homes.scottlaboe.com` | [house-hunter](https://github.com/scottlaboe/house-hunters) (separate repo and Compose project; Caddy reaches it over the shared `edge` network) |
 
 ## Set up a new server
 
@@ -26,7 +26,7 @@ static site to `/srv/portfolio`, and installs cron jobs. Then it:
   and saves it there;
 - starts everything, and if the WordPress database is empty, restores the newest `db/` dump and
   `uploads/` from the backup bucket;
-- installs [house-hunter](https://github.com/scottlaboe/house-hunter), cloning the private repo with
+- installs [house-hunter](https://github.com/scottlaboe/house-hunters), cloning the private repo with
   a read-only deploy key from SSM `/house-hunter/deploy-key` (skipped if the key isn't there).
 
 It is safe to re-run, and it never restores over existing data. Point DNS at the new server's

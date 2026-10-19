@@ -30,7 +30,7 @@ www.blog.scottlaboe.com {
 	redir https://blog.scottlaboe.com{uri} permanent
 }
 
-# House Hunter (separate repo: scottlaboe/house-hunter, its own Compose project on the "edge" network)
+# House Hunter (separate repo: scottlaboe/house-hunters, its own Compose project on the "edge" network)
 homes.scottlaboe.com {
 	encode zstd gzip
 	header {

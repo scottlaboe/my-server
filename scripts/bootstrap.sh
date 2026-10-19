@@ -22,7 +22,7 @@ SITE_URL="${SITE_URL:-https://github.com/scottlaboe/scottlaboe.com.git}"
 APP_DIR="${APP_DIR:-/opt/my-server}"
 PORTFOLIO_DIR="${PORTFOLIO_DIR:-/srv/portfolio}"
 SWAP_SIZE="${SWAP_SIZE:-2G}"
-HH_REPO_URL="${HH_REPO_URL:-git@github.com:scottlaboe/house-hunter.git}"
+HH_REPO_URL="${HH_REPO_URL:-git@github.com:scottlaboe/house-hunters.git}"
 HH_BRANCH="${HH_BRANCH:-main}"
 HH_DIR="${HH_DIR:-/opt/house-hunter}"
 HH_KEY_PARAM="${HH_KEY_PARAM:-/house-hunter/deploy-key}"
@@ -145,7 +145,7 @@ if key="$(aws ssm get-parameter --name "$HH_KEY_PARAM" --with-decryption --query
   git -C "$HH_DIR" config core.sshCommand "$ssh_cmd"
   "$HH_DIR/scripts/install.sh"
 else
-  echo "   deploy key not readable from SSM; skipping (run house-hunter's scripts/setup-aws.sh)"
+  echo "   deploy key not readable from SSM; skipping (see the deploy-key steps in house-hunters CLAUDE.md)"
 fi
 
 echo
